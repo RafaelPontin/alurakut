@@ -27,7 +27,27 @@ export default function Home() {
 
   const gitHubUser = 'RafaelPontin';
   const [comunidades, setComunidade] = React.useState([...comunidadesDados]);
-  const pessoasFavoritas = [...pessoasFavoritasDados ]
+  //const pessoasFavoritas = [...pessoasFavoritasDados ]
+  const [seguidores, setSeguidores] = React.useState([])
+
+  React.useEffect(function(){
+      fetch('https://api.github.com/users/peas/followers')
+      .then(function (repostaDoServidor){
+        return repostaDoServidor.json();
+      })
+      .then(function (respostaCompleta){
+        console.log(respostaCompleta);
+        setSeguidores(respostaCompleta.map((object, index) => {
+          return(
+            {
+              id: new Date().getTime() + object.login,
+              title: object.login,
+              image: `https://github.com/${object.login}.png` 
+            }
+          );
+        }));
+    })
+  }, [])
 
   return (
     <>
@@ -85,7 +105,7 @@ export default function Home() {
         </div>
         <div className="profileRelationsArea" style={{gridArea: 'profileRelationsArea'}}>
           
-          <BoxContainer title= "Pessoas da comunidades" info = {pessoasFavoritas} />
+          <BoxContainer title= "Pessoas da comunidades" info = {seguidores} />
           <BoxContainer title="Comunidades" info={comunidades} />
         </div>
       </MainGrid>
