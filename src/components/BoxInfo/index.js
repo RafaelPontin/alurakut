@@ -14,7 +14,7 @@ const BoxContainer = (props) => {
                         return(
                             <li key={new Date().getTime + index}>
                                 <a href={`/${props.title}/${object.title}`} key={object.title}>
-                                    <img src={object.image}/>
+                                    <img src={object.imageUrl}/>
                                     <span>{object.title}</span>
                                     </a>
                              </li>

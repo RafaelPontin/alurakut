@@ -26,8 +26,7 @@ function ProfileSidebar(props){
 export default function Home() {
 
   const gitHubUser = 'RafaelPontin';
-  const [comunidades, setComunidade] = React.useState([...comunidadesDados]);
-  //const pessoasFavoritas = [...pessoasFavoritasDados ]
+  const [comunidades, setComunidade] = React.useState([]);
   const [seguidores, setSeguidores] = React.useState([])
 
   React.useEffect(function(){
@@ -42,11 +41,39 @@ export default function Home() {
             {
               id: new Date().getTime() + object.login,
               title: object.login,
-              image: `https://github.com/${object.login}.png` 
+              imageUrl: `https://github.com/${object.login}.png` 
             }
           );
         }));
     })
+
+   
+    fetch('https://graphql.datocms.com/', {
+      method: 'POST',
+      headers: {
+        'Authorization': '501a4421087a3b6cf5c495d203abce',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({ "query": `query {
+        allCommunities {
+          id 
+          title
+          imageUrl
+          creatorSlug
+        }
+      }`
+   })
+    })
+    .then((response) => response.json()) // Pega o retorno do response.json() e já retorna
+    .then((respostaCompleta) => {
+      const comunidadesVindasDoDato = respostaCompleta.data.allCommunities;
+      console.log(comunidadesVindasDoDato)
+      setComunidade(comunidadesVindasDoDato)
+    })
+
+
+
   }, [])
 
   return (
@@ -71,16 +98,31 @@ export default function Home() {
               const dadosDoForm = new FormData(e.target);
         
               const comunidade = {
-                id: new Date().toISOString(),
                 title: dadosDoForm.get('title'),
-                image: dadosDoForm.get('image')
-              }
-              if(comunidade.image === ""){
-                comunidade.image = "https://picsum.photos/200/300?id=" + new Date().getTime();
+                imageUrl: dadosDoForm.get('image'),
+                creatorSlug: gitHubUser
               }
 
-              const comunidadesAtualizadas = [... comunidades, comunidade];
-              setComunidade(comunidadesAtualizadas);
+              if(comunidade.imageUrl === ""){
+                comunidade.imageUrl = "https://picsum.photos/200/300?id=" + new Date().getTime();
+              }
+
+              fetch('/api/comunidades', {
+                  method: 'POST',
+                  headers:{
+                    'Content-Type' : 'application/json'
+                  },
+                  body: JSON.stringify(comunidade)
+              })
+              .then(async (response) => {
+                const dados = await response.json();
+                console.log(dados.registroCriado);
+                const comunidade = dados.registroCriado;
+                const comunidadesAtualizadas = [...comunidades, comunidade];
+                console.log(comunidadesAtualizadas);
+                setComunidade(comunidadesAtualizadas)
+              })
+
             }}>
                 <div>
                 <input 
