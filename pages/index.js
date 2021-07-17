@@ -1,10 +1,12 @@
 import React from 'react';
+import nookies from 'nookies';
+import jwt from 'jsonwebtoken';
+
 import MainGrid from '../src/components/MainGrid';
 import Box from '../src/components/Box';
-import { AlurakutMenu, AlurakutProfileSidebarMenuDefault, OrkutNostalgicIconSet } from '../src/lib/AlurakutCommons'
-import { ProfileRelationsBoxWrapper } from '../src/components/ProfileRelations';
+import { AlurakutMenu, AlurakutProfileSidebarMenuDefault, OrkutNostalgicIconSet } from '../src/lib/AlurakutCommons';
 import BoxContainer from '../src/components/BoxInfo';
-import {comunidadesDados, pessoasFavoritasDados} from '../src/dados';
+
 
 
 function ProfileSidebar(props){
@@ -23,14 +25,15 @@ function ProfileSidebar(props){
   );
 }
 
-export default function Home() {
+export default function Home(props) {
 
-  const gitHubUser = 'RafaelPontin';
+  const gitHubUser = props.githubUser;
+  console.log(props);
   const [comunidades, setComunidade] = React.useState([]);
   const [seguidores, setSeguidores] = React.useState([])
 
   React.useEffect(function(){
-      fetch('https://api.github.com/users/peas/followers')
+      fetch(`https://api.github.com/users/${gitHubUser}/followers`)
       .then(function (repostaDoServidor){
         return repostaDoServidor.json();
       })
@@ -153,4 +156,35 @@ export default function Home() {
       </MainGrid>
     </>
   );
+}
+
+
+export async function getServerSideProps(context) {
+  const cookies = nookies.get(context);
+  const token = cookies.USER_TOKEN;
+  
+
+  const { isAuthenticated } = await fetch('https://alurakut.vercel.app/api/auth', {
+    headers: {
+        Authorization: token
+      }
+  })
+  .then((resposta) => resposta.json())
+
+  console.log(`isAuthozation ${isAuthenticated}`);
+
+  if(!isAuthenticated) {
+    return {
+      redirect: {
+        destination: '/login',
+        permanent: false,
+      }
+    }
+  }
+  const {githubUser} = jwt.decode(token);
+  return {
+    props: {
+      githubUser
+    }, // will be passed to the page component as props
+  }
 }
